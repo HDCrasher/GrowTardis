@@ -3,18 +3,22 @@
 #include <PubSubClient.h>
 
 const char* ssid = "Genies1";
-const char* password = "#############";
+const char* password = "######";
 const char* mqtt_server = "192.168.178.13";
 const int mqtt_port = 1883;  // Standard MQTT-Port
 
 // MQTT-Zugangsdaten
 const char* mqtt_user = "mqttuser";
-const char* mqtt_password = "########";
+const char* mqtt_password = "######";
 
 // MQTT-Themen
 const char* temp_topic = "home/esp32/temperature";
 const char* relay_topic = "home/esp32/relay";
+const char* fan_topic = "home/esp32/fantacho";
+const char* water_topic = "home/esp32/water";
 const char* command_topic = "home/esp32/relay/set";
+const char* fan_cmd_topic = "home/esp32/fantacho/pwm";
+
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -29,9 +33,9 @@ PubSubClient client(espClient);
 #define FAN_PWM_U       37  // GPIO37 für PWM-Signal an Lüfter
 #define FAN_PWM_I       46  // GPIO46 für PWM-Signal an Lüfter
 
-#define FAN_TACHO_o     41  // GPIO41 für Tacho-Signal an Lüfter
-#define FAN_TACHO_u     36  // GPIO36 für Tacho-Signal an Lüfter
-#define FAN_TACHO_i     47  // GPIO47 für Tacho-Signal an Lüfter
+#define FAN_TACHO_O     41  // GPIO41 für Tacho-Signal an Lüfter
+#define FAN_TACHO_U     36  // GPIO36 für Tacho-Signal an Lüfter
+#define FAN_TACHO_I     47  // GPIO47 für Tacho-Signal an Lüfter
 
 // Wasserstand-Pin
 #define WASSER_PIN_HALB 15  // GPIO15 für WasserSensor Oben (weiß)  
@@ -67,10 +71,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println(topic);
   if (strcmp(topic, command_topic) == 0) {
     if ((char)payload[0] == '1') {
-      digitalWrite(relayPin, HIGH);
+      digitalWrite(RELAY_O, HIGH);
       client.publish(relay_topic, "1");  // Relaisstatus aktualisieren
     } else {
-      digitalWrite(relayPin, LOW);
+      digitalWrite(RELAY_O, LOW);
       client.publish(relay_topic, "0");
     }
   }
@@ -98,10 +102,8 @@ void setup() {
     Serial.begin(115200);
     setup_wifi();
 
-    server.on("/set", handleSet);
-    server.begin();
     Serial.begin(115200);
-    Serial.println("ESP32-S3 GrowoBox_v1_0_2 Noch Mehr Sensoren");
+    Serial.println("ESP32-S3 GrowTardis WLAN TEST");
 
     // Pins als Ausgang setzen
     pinMode(RELAY_O, OUTPUT);
@@ -182,20 +184,39 @@ void loop() {
         }
     }
 
-    // MQTT Wertübergabe und Verhalten
+    // MQTT Verbindung sicherstellen
     if (!client.connected()) {
         reconnect();
     }
     client.loop();
-  
-    // Simulierte Temperatur senden
-    temperature = random(20, 30);  // Dummy-Wert für Test
-    char tempString[8];
-    dtostrf(temperature, 1, 2, tempString);
-    client.publish(temp_topic, tempString);
-  
+
+    // Temperatur & Feuchtigkeit als MQTT-Nachricht senden
+    char temp_oben_str[8], temp_unten_str[8], hum_oben_str[8], hum_unten_str[8];
+
+    dtostrf(temperature_oben, 1, 2, temp_oben_str);
+    dtostrf(temperature_unten, 1, 2, temp_unten_str);
+    dtostrf(humidity_oben, 1, 2, hum_oben_str);
+    dtostrf(humidity_unten, 1, 2, hum_unten_str);
+
+    client.publish("home/esp32/temp_oben", temp_oben_str);
+    client.publish("home/esp32/temp_unten", temp_unten_str);
+    client.publish("home/esp32/hum_oben", hum_oben_str);
+    client.publish("home/esp32/hum_unten", hum_unten_str);
+
+    // Wasserstand senden
+    client.publish(water_topic, wasserstand.c_str());
+
+    // Relaisstatus senden
+    char relay1State[2], relay2State[2];
+    sprintf(relay1State, "%d", digitalRead(RELAY_O));
+    sprintf(relay2State, "%d", digitalRead(RELAY_U));
+
+    client.publish("home/esp32/relay1", relay1State);
+    client.publish("home/esp32/relay2", relay2State);
+
+
     delay(5000);
-    // Sensorwerte ausgeben
+    // Seriell: Sensorwerte ausgeben
     Serial.print("Relay 1 ist ");
     Serial.print(digitalRead(RELAY_O) ? "AUS" : "AN");
     Serial.print("  |  Relay 2 ist ");
