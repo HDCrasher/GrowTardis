@@ -31,7 +31,7 @@ PubSubClient client(espClient);
                         
 #define FAN_PWM_O       42  // GPIO42 für PWM-Signal an Lüfter
 #define FAN_PWM_U       37  // GPIO37 für PWM-Signal an Lüfter
-#define FAN_PWM_I       46  // GPIO46 für PWM-Signal an Lüfter
+#define FAN_PWM_I       48  // GPIO46 für PWM-Signal an Lüfter
 
 #define FAN_TACHO_O     41  // GPIO41 für Tacho-Signal an Lüfter
 #define FAN_TACHO_U     36  // GPIO36 für Tacho-Signal an Lüfter
