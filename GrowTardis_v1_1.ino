@@ -36,8 +36,10 @@ PubSubClient client(espClient);
 #define FAN_TACHO_i     47  // GPIO47 für Tacho-Signal an Lüfter
 
 // Wasserstand-Pin
-#define WASSER_PIN_HALB 15  // GPIO15 für WasserSensor Oben (weiß)  
-#define WASSER_PIN_LEER 16  // GPIO16 für WasserSensor Unten (Grün)  
+#define WASSER_PIN_1 15  // GPIO15 für WasserSensor Oben (weiß)  
+#define WASSER_PIN_2 16  // GPIO16 für WasserSensor Unten (Grün)  
+#define WASSER_PIN_3  1  // GPIO01 auf der anderen Seite für insgesamt 4 wasserstände 
+#define WASSER_PIN_4  2  // GPIO02 auf der anderen Seite für insgesamt 4 wasserstände
 
 // DHT11-Sensor Einstellungen
 #define DHT_PIN_O       10  // GPIO04 für DHT11
